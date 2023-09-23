@@ -8,6 +8,7 @@ use crate::oauth;
 use crate::well_known;
 use actix_web::web;
 
+// ルーティング全部
 pub fn root_router(cfg: &mut web::ServiceConfig) {
     cfg.route("/nodeinfo/2.0", web::get().to(nodeinfo::index))
         .service(

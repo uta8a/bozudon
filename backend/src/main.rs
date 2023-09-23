@@ -94,7 +94,7 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(web::Data::new(database.clone()))
             .app_data(web::Data::new(storage.clone()))
-            // router部分
+            // ルーティング登録部分
             .configure(router::root_router)
     })
     .bind((app_addr, app_port))?
