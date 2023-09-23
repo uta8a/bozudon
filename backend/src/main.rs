@@ -51,22 +51,27 @@ async fn main() -> std::io::Result<()> {
         std::env::set_var("RUST_LOG", "info");
     }
 
+    // bozudon server config
     let app_addr = std::env::var("APP_ADDR").unwrap_or("0.0.0.0".to_string());
     let app_port = std::env::var("APP_PORT")
         .unwrap_or("8080".to_string())
         .parse::<u16>()
         .unwrap();
 
+    // Image file storage
     let data_dir = std::env::var("DATA_DIR").unwrap_or(String::from("/attachments"));
     std::fs::create_dir_all(&data_dir).unwrap();
     let storage = storage::LocalStorage::new(Path::new(&data_dir).to_path_buf());
 
+    // main entrypoint of bozudon server
     HttpServer::new(move || {
+        // server nameは `http://{server_name}/` でサーバのURLを構成する
         let server_name = env::var("SERVER_NAME").unwrap();
         let server_url = env::var("SERVER_URL").unwrap_or("http://127.0.0.1:8080".to_string());
         let client_url = env::var("CLIENT_URL").unwrap_or("http://127.0.0.1:3000".to_string());
         App::new()
             .wrap(Logger::default())
+            // app_data はconfigデータを詰め込むっぽい
             .app_data(Data::new(Config {
                 uri: server_name.clone(),
                 title: "Bozudon".to_string(),
@@ -77,6 +82,7 @@ async fn main() -> std::io::Result<()> {
                 streaming_api: format!("wss://{}", server_name.clone()),
                 server_url: server_url.clone(),
             }))
+            // CORS設定、サーバとクライアントが分離している場合
             .wrap(
                 Cors::default()
                     .allowed_origin(client_url.as_str())
@@ -88,6 +94,7 @@ async fn main() -> std::io::Result<()> {
             )
             .app_data(web::Data::new(database.clone()))
             .app_data(web::Data::new(storage.clone()))
+            // router部分
             .configure(router::root_router)
     })
     .bind((app_addr, app_port))?
